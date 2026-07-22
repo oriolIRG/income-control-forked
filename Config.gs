@@ -34,9 +34,12 @@ function getLocations() {
 }
 
 // ── Shifts ─────────────────────────────────────────────────────────
-// Pestaña "🕐 Shifts" — columnas: Location | DOW (0=Dom) | Desde | Hasta | Nombre
+// Pestaña "🕐 Shifts" — columnas: Location | DOW (0=Dom) | Desde | Hasta | Nombre | Fecha
 // DOW = día de reporte (el del rango que empieza a las 06:00)
 // Si Desde > Hasta el rango cruza la medianoche (ej: 22:00 → 06:00)
+// Fecha (col F, opcional):
+//   - vacía        → mapping por defecto (aplica a cualquier día sin override)
+//   - yyyy-MM-dd   → override que SOLO aplica a ese reporting day (todas las locations)
 function getShifts() {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('🕐 Shifts');
   if (!sh) throw new Error('Pestaña "🕐 Shifts" no encontrada.');
@@ -52,7 +55,8 @@ function getShifts() {
       dow      : parseInt(r[1]),
       from     : String(r[2]).trim(),  // "20:00" directamente, sin conversión
       to       : String(r[3]).trim(),  // "06:00" directamente
-      shift    : String(r[4]).trim()
+      shift    : String(r[4]).trim(),
+      date     : String(r[5] || '').trim()  // "" o "2026-07-18"
     }));
 }
 

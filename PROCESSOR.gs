@@ -76,10 +76,17 @@ function getOrderEffectiveTs(order, orderEffectiveTsMap) {
 function resolveShift(utcStr, locationName, shifts) {
   const d   = new Date(utcStr);
   const hm  = Utilities.formatDate(d, TIMEZONE, 'HH:mm');
-  const dow = getReportingDow(getReportingDate(utcStr));
+  const repDate = getReportingDate(utcStr);
+  const dow = getReportingDow(repDate);
   const cur = _toMins(hm);
 
-  for (const s of shifts) {
+  // ¿Hay override fechado para este reporting day? (aplica a TODAS las locations)
+  const hasOverride = shifts.some(s => s.date === repDate);
+  const pool = hasOverride
+    ? shifts.filter(s => s.date === repDate)  // solo el mapping especial de ese día
+    : shifts.filter(s => !s.date);            // solo el mapping por defecto
+
+  for (const s of pool) {
     if (s.location !== locationName || s.dow !== dow) continue;
     const from = _toMins(s.from);
     const to   = _toMins(s.to);
