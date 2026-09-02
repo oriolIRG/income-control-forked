@@ -19,17 +19,24 @@
 // ═══════════════════════════════════════════════════════════════════
 
 // ── Tunables para offline payments ─────────────────────────────────
+// AJUSTE FINAL DE TEMPORADA (revisar en invierno con local cerrado):
+// bajado de 4 a 2 días para reducir el tiempo de sync — cada fecha
+// procesada vuelve a pedir a Square toda la ventana desde cero, así
+// que 4 fechas × ventana de 6 días solapada = mucha redundancia.
+// Pendiente para invierno: refactor a fetch único por lote en vez de
+// por fecha individual, para poder subir esto sin penalizar tiempo.
+//
 // Por delante: cuántos días futuros se consultan para capturar pagos
 // offline sincronizados tarde. Square típicamente sincroniza en horas,
-// pero un terminal apagado durante días puede retrasarlo. 14 = margen
-// muy seguro; bájalo a 7 si el coste de API es importante.
-const OFFLINE_LOOKAHEAD_DAYS = 4;
+// pero un terminal apagado durante días puede retrasarlo. Con 2 días
+// se cubre cualquier corte de conexión de un fin de semana normal.
+const OFFLINE_LOOKAHEAD_DAYS = 2;
 
 // Por detrás: cuántos días pasados re-procesa el sync diario. Esto
 // permite que las correcciones offline tardías (registradas hoy pero
 // con client_created_at = hace X días) se reflejen en sus reporting
 // days correctos.
-const OFFLINE_LOOKBACK_DAYS = 4;
+const OFFLINE_LOOKBACK_DAYS = 2;
 
 function onOpen() {
   SpreadsheetApp.getUi()
