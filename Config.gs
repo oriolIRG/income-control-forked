@@ -26,11 +26,21 @@ function setSquareToken(t) {
 }
 
 // ── Locations ──────────────────────────────────────────────────────
-// Pestaña "📍 Locations" — columnas: Nombre | Square ID | Activa
+// Pestaña "📍 Locations" — columnas: Nombre | Square ID | Activa | (D libre) | Inicio día (hora, opcional)
+// Col E (opcional): hora local (0-23) en la que empieza el "business day"
+// de esta location. Si está vacía, se usa DAY_START_HOUR (6 = 06:00-06:00).
+// Pon 0 para que la location trabaje en formato natural 00:00-23:59.
 function getLocations() {
   return _sheetRows('📍 Locations')
     .filter(r => String(r[2]).toUpperCase() === 'TRUE' || r[2] === true)
-    .map(r => ({ name: String(r[0]).trim(), id: String(r[1]).trim() }));
+    .map(r => {
+      const override = parseInt(r[4], 10);
+      return {
+        name: String(r[0]).trim(),
+        id: String(r[1]).trim(),
+        dayStartHour: Number.isInteger(override) ? override : DAY_START_HOUR
+      };
+    });
 }
 
 // ── Shifts ─────────────────────────────────────────────────────────

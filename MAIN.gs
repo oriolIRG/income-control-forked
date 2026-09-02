@@ -175,13 +175,13 @@ function _syncOneDay(loc, reportingDate, shifts, configCategories, itemCatMap, c
   // ── Filtrado al reporting_date usando timestamps efectivos ─────
   const orders = allOrders.filter(o => {
     const ts = getOrderEffectiveTs(o, orderEffTsMap);
-    return ts && getReportingDate(ts) === reportingDate;
+    return ts && getReportingDate(ts, loc.dayStartHour) === reportingDate;
   });
   const payments = allPayments.filter(p => {
     const ts = getPaymentEffectiveTs(p);
-    return ts && getReportingDate(ts) === reportingDate;
+    return ts && getReportingDate(ts, loc.dayStartHour) === reportingDate;
   });
-  const refunds = allRefunds.filter(r => r.created_at && getReportingDate(r.created_at) === reportingDate);
+  const refunds = allRefunds.filter(r => r.created_at && getReportingDate(r.created_at, loc.dayStartHour) === reportingDate);
 
   logMessage('INFO', `  órdenes:${orders.length} payments:${payments.length} refunds:${refunds.length}`);
 
@@ -223,8 +223,8 @@ function createConfigSheets() {
   }
 
   createIfMissing('📍 Locations',
-    ['Nombre', 'Square Location ID', 'Activa'],
-    ['Poolbar', 'LHXWC3DTV5D8V', 'TRUE']
+    ['Nombre', 'Square Location ID', 'Activa', '', 'Inicio día (hora, opcional — vacío = 6)'],
+    ['Poolbar', 'LHXWC3DTV5D8V', 'TRUE', '', '']
   );
 
   createIfMissing('🕐 Shifts',
@@ -294,7 +294,7 @@ function _runDiscountsOnly(reportingDates) {
 
         const orders = allOrders.filter(o => {
           const ts = getOrderEffectiveTs(o, orderEffTsMap);
-          return ts && getReportingDate(ts) === date;
+          return ts && getReportingDate(ts, loc.dayStartHour) === date;
         });
 
         if (!orders.length) continue;

@@ -18,14 +18,17 @@
 // ═══════════════════════════════════════════════════════════════════
 
 // ── Día de reporte ─────────────────────────────────────────────────
-// Los días van de 06:00 a 05:59 del siguiente día (hora local).
+// Por defecto los días van de 06:00 a 05:59 del siguiente día (hora local).
 // Un pedido a las 03:15 del lunes tiene reporting_date = domingo.
-function getReportingDate(utcStr) {
+// `dayStartHour` es opcional y por-location (ver Config.gs → getLocations).
+// Si se pasa 0, el día es simplemente el día natural (00:00-23:59).
+function getReportingDate(utcStr, dayStartHour) {
+  if (dayStartHour === undefined || dayStartHour === null) dayStartHour = DAY_START_HOUR;
   const d = new Date(utcStr);
   const local = Utilities.formatDate(d, TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
   const hour  = parseInt(local.split(' ')[1]);
   const date  = local.split(' ')[0];
-  if (hour >= DAY_START_HOUR) return date;
+  if (hour >= dayStartHour) return date;
   const prev = new Date(d.getTime() - 24 * 3600 * 1000);
   return Utilities.formatDate(prev, TIMEZONE, 'yyyy-MM-dd');
 }
@@ -73,10 +76,10 @@ function getOrderEffectiveTs(order, orderEffectiveTsMap) {
 }
 
 // ── Shift ──────────────────────────────────────────────────────────
-function resolveShift(utcStr, locationName, shifts) {
+function resolveShift(utcStr, locationName, shifts, dayStartHour) {
   const d   = new Date(utcStr);
   const hm  = Utilities.formatDate(d, TIMEZONE, 'HH:mm');
-  const repDate = getReportingDate(utcStr);
+  const repDate = getReportingDate(utcStr, dayStartHour);
   const dow = getReportingDow(repDate);
   const cur = _toMins(hm);
 
@@ -201,8 +204,8 @@ function buildRows(orders, payments, refunds, location, shifts, configCategories
     // CAMBIO: usar el ts efectivo (offline-aware)
     const ts = getOrderEffectiveTs(order, orderEffectiveTsMap);
     if (!ts) continue;
-    const date  = getReportingDate(ts);
-    const shift = resolveShift(ts, location.name, shifts);
+    const date  = getReportingDate(ts, location.dayStartHour);
+    const shift = resolveShift(ts, location.name, shifts, location.dayStartHour);
     const row   = ensure(date, shift);
     row.order_count++;
 
@@ -264,8 +267,8 @@ function buildRows(orders, payments, refunds, location, shifts, configCategories
   for (const pmt of payments) {
     // CAMBIO: usar ts efectivo (offline-aware)
     const ts    = getPaymentEffectiveTs(pmt);
-    const date  = getReportingDate(ts);
-    const shift = resolveShift(ts, location.name, shifts);
+    const date  = getReportingDate(ts, location.dayStartHour);
+    const shift = resolveShift(ts, location.name, shifts, location.dayStartHour);
     const row   = ensure(date, shift);
 
     const amount = pmt.amount_money ? pmt.amount_money.amount : 0;
@@ -304,8 +307,8 @@ function buildRows(orders, payments, refunds, location, shifts, configCategories
   // Para refunds nos quedamos con created_at (no hay equivalente offline_*).
   // Si llegan a darse refunds offline en el futuro, se ajusta aquí.
   for (const ref of refunds) {
-    const date   = getReportingDate(ref.created_at);
-    const shift  = resolveShift(ref.created_at, location.name, shifts);
+    const date   = getReportingDate(ref.created_at, location.dayStartHour);
+    const shift  = resolveShift(ref.created_at, location.name, shifts, location.dayStartHour);
     const row    = ensure(date, shift);
     const amount = ref.amount_money ? ref.amount_money.amount : 0;
 
@@ -374,8 +377,8 @@ function buildDiscountRows(orders, location, shifts, itemCategoryMap, catResMap,
     if (!ts) continue;
 
     const hasTender = order.tenders && order.tenders.length > 0 ? 'Y' : 'N';
-    const date      = getReportingDate(ts);
-    const shift     = resolveShift(ts, location.name, shifts);
+    const date      = getReportingDate(ts, location.dayStartHour);
+    const shift     = resolveShift(ts, location.name, shifts, location.dayStartHour);
 
     for (const li of (order.line_items || [])) {
       if (li.quantity && parseFloat(li.quantity) < 0) continue;
