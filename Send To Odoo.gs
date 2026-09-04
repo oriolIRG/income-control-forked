@@ -349,7 +349,7 @@ function _buildAccountTypeMap(config) {
   const map = {};
 
   // Ingresos (HABER)
-  const tiposIngreso = ['FOOD', 'DRINK', 'MERCH', 'SERV_CHARGE', 'NO_SHOW','DOOR_TICKETS', 'TIPS'];
+  const tiposIngreso = ['FOOD', 'DRINK', 'MERCH', 'SERV_CHARGE', 'NO_SHOW','DOOR_TICKETS', 'VENTAS_BAR_PACKAGES', 'TIPS', 'DRINK_PACKAGES_H'];
   tiposIngreso.forEach(tipo => {
     const acc = config.get('INGRESO_CUENTA', tipo, '');
     if (acc !== '' && acc !== null) {
@@ -363,7 +363,7 @@ function _buildAccountTypeMap(config) {
   });
 
   // Pagos generales (DEBE)
-  ['CREDIT_CARD', 'CHARGE_TO_ROOM', 'PREPAYMENT'].forEach(tipo => {
+  ['CREDIT_CARD', 'CHARGE_TO_ROOM', 'PREPAYMENT', 'DRINK_PACKAGES_D'].forEach(tipo => {
     const acc = config.get('PAGO_CUENTA', tipo, '');
     if (acc !== '' && acc !== null) {
       const accId = parseInt(acc, 10);
